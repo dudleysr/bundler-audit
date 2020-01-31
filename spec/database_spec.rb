@@ -10,32 +10,13 @@ describe Bundler::Audit::Database do
   describe "path" do
     subject { described_class.path }
 
-    it "it should be a directory" do
-      expect(File.directory?(subject)).to be_truthy
-    end
-
-    it "should prefer the user repo, iff it's as up to date, or more up to date than the vendored one" do
-      Bundler::Audit::Database.update!(quiet: false)
-
-      Dir.chdir(Bundler::Audit::Database::USER_PATH) do
-        puts "Timestamp:"
-        system 'git log --pretty="%cd" -1'
-      end
-
-      # As up to date...
-      expect(Bundler::Audit::Database.path).to eq mocked_user_path
-
-      # More up to date...
-      fake_a_commit_in_the_user_repo
-      expect(Bundler::Audit::Database.path).to eq mocked_user_path
-
-      roll_user_repo_back(20)
-      expect(Bundler::Audit::Database.path).to eq Bundler::Audit::Database::VENDORED_PATH
+    it "must default to DEFAULT_PATH" do
+      expect(subject.path).to be == described_class::DEFAULT_PATH
     end
   end
 
   describe "update!" do
-    it "should create the USER_PATH path as needed" do
+    it "should create the DEFAULT_PATH path as needed" do
       Bundler::Audit::Database.update!(quiet: false)
       expect(File.directory?(mocked_user_path)).to be true
     end

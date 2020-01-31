@@ -38,7 +38,7 @@ module Bundler
       VENDORED_TIMESTAMP = Time.parse(File.read("#{VENDORED_PATH}.ts")).utc
 
       # Path to the user's copy of the ruby-advisory-db
-      USER_PATH = File.expand_path(File.join(ENV['HOME'],'.local','share','ruby-advisory-db'))
+      DEFAULT_PATH = File.expand_path(File.join(ENV['HOME'],'.local','share','ruby-advisory-db'))
 
       # The path to the advisory database
       attr_reader :path
@@ -67,16 +67,7 @@ module Bundler
       #   The path to the database directory.
       #
       def self.path
-        if File.directory?(USER_PATH)
-          t1 = Dir.chdir(USER_PATH) { Time.parse(`git log --date=iso8601 --pretty="%cd" -1`) }
-          t2 = VENDORED_TIMESTAMP
-
-          if t1 >= t2 then USER_PATH
-          else             VENDORED_PATH
-          end
-        else
-          VENDORED_PATH
-        end
+        @path ||= DEFAULT_PATH
       end
 
       #
@@ -96,9 +87,10 @@ module Bundler
       #
       def self.update!(options={})
         raise "Invalid option(s)" unless (options.keys - [:quiet]).empty?
-        if File.directory?(USER_PATH)
-          if File.directory?(File.join(USER_PATH, ".git"))
-            Dir.chdir(USER_PATH) do
+
+        if File.directory?(path)
+          if File.directory?(File.join(path, ".git"))
+            Dir.chdir(path) do
               command = %w(git pull)
               command << '--quiet' if options[:quiet]
               command << 'origin' << 'master'
@@ -108,7 +100,7 @@ module Bundler
         else
           command = %w(git clone)
           command << '--quiet' if options[:quiet]
-          command << URL << USER_PATH
+          command << URL << path
           system *command
         end
       end
