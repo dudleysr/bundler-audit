@@ -14,24 +14,10 @@ require 'time'
 require 'rubygems/tasks'
 Gem::Tasks.new
 
-namespace :db do
-  desc 'Updates data/ruby-advisory-db'
-  task :update do
-    timestamp = nil
-
-    chdir 'data/ruby-advisory-db' do
-      sh 'git', 'pull', 'origin', 'master'
-
-      File.open('../ruby-advisory-db.ts','w') do |file|
-        file.write Time.parse(`git log --pretty="%cd" -1`).utc
-      end
-    end
-
-    sh 'git', 'commit', 'data/ruby-advisory-db',
-                        'data/ruby-advisory-db.ts',
-                        '-m', 'Updated ruby-advisory-db'
-  end
+directory 'spec/data/ruby-advisory-db' do
+  sh 'git clone https://github.com/rubysec/ruby-advisory-db spec/data/ruby-advisory-db'
 end
+task 'spec:ruby-advisory-db' => 'spec/data/ruby-advisory-db'
 
 require 'rspec/core/rake_task'
 RSpec::Core::RakeTask.new
@@ -47,7 +33,7 @@ namespace :spec do
     end
   end
 end
-task :spec => 'spec:bundle'
+task :spec => %w[spec:ruby-advisory-db spec:bundle]
 
 task :test    => :spec
 task :default => :spec

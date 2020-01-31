@@ -3,32 +3,42 @@ require 'bundler/audit/database'
 require 'tmpdir'
 
 describe Bundler::Audit::Database do
-  let(:vendored_advisories) do
-    Dir[File.join(Bundler::Audit::Database::VENDORED_PATH, 'gems/*/*.yml')].sort
+  let(:advisory_paths) do
+    Dir[File.join(described_class.path, 'gems/*/*.yml')].sort
   end
 
   describe "path" do
     subject { described_class.path }
 
     it "must default to DEFAULT_PATH" do
-      expect(subject.path).to be == described_class::DEFAULT_PATH
+      expect(subject).to be == described_class::DEFAULT_PATH
     end
   end
 
   describe "update!" do
-    it "should create the DEFAULT_PATH path as needed" do
-      Bundler::Audit::Database.update!(quiet: false)
-      expect(File.directory?(mocked_user_path)).to be true
+    context "when the database does not exist" do
+      before do
+        described_class.path = Dir::Tmpname.create('ruby-advisory-db-') { }
+      end
+
+      it "must clone the database" do
+        expect_update_to_clone_repo!
+
+        Bundler::Audit::Database.update!(quiet: false)
+      end
+
+      after do
+        FileUtils.rm_rf(described_class.path)
+        described_class.path = test_ruby_advisory_db
+      end
     end
 
-    it "should create the repo, then update it given multple successive calls." do
-      expect_update_to_clone_repo!
-      Bundler::Audit::Database.update!(quiet: false)
-      expect(File.directory?(mocked_user_path)).to be true
+    context "when the database already exists" do
+      it "must update the database" do
+        expect_update_to_update_repo!
 
-      expect_update_to_update_repo!
-      Bundler::Audit::Database.update!(quiet: false)
-      expect(File.directory?(mocked_user_path)).to be true
+        Bundler::Audit::Database.update!(quiet: false)
+      end
     end
   end
 
@@ -91,7 +101,7 @@ describe Bundler::Audit::Database do
   end
 
   describe "#size" do
-    it { expect(subject.size).to eq vendored_advisories.count }
+    it { expect(subject.size).to eq advisory_paths.count }
   end
 
   describe "#advisories" do
@@ -101,7 +111,7 @@ describe Bundler::Audit::Database do
         map(&:path).
         sort
 
-      expect(actual_advisories).to eq vendored_advisories
+      expect(actual_advisories).to eq advisory_paths
     end
   end
 
@@ -113,7 +123,7 @@ describe Bundler::Audit::Database do
 
   describe "#inspect" do
     it "should produce a Ruby-ish instance descriptor" do
-      expect(Bundler::Audit::Database.new.inspect).to eq("#<Bundler::Audit::Database:#{Bundler::Audit::Database::VENDORED_PATH}>")
+      expect(Bundler::Audit::Database.new.inspect).to eq("#<Bundler::Audit::Database:#{described_class.path}>")
     end
   end
 end

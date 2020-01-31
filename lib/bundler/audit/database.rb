@@ -31,12 +31,6 @@ module Bundler
       # Git URL of the ruby-advisory-db
       URL = 'https://github.com/rubysec/ruby-advisory-db.git'
 
-      # Default path to the ruby-advisory-db
-      VENDORED_PATH =  File.expand_path(File.join(File.dirname(__FILE__),'..','..','..','data','ruby-advisory-db'))
-
-      # Timestamp for when the database was last updated
-      VENDORED_TIMESTAMP = Time.parse(File.read("#{VENDORED_PATH}.ts")).utc
-
       # Path to the user's copy of the ruby-advisory-db
       DEFAULT_PATH = File.expand_path(File.join(ENV['HOME'],'.local','share','ruby-advisory-db'))
 
@@ -68,6 +62,21 @@ module Bundler
       #
       def self.path
         @path ||= DEFAULT_PATH
+      end
+
+      #
+      # Sets the default path.
+      #
+      # @param [String] new_path
+      #   The new default path to use.
+      #
+      # @return [String]
+      #   The new default path.
+      #
+      # @api semipublic
+      #
+      def self.path=(new_path)
+        @path = new_path
       end
 
       #
