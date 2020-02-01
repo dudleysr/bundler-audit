@@ -96,15 +96,9 @@ module Bundler
       #
       def self.update!(options={})
         raise "Invalid option(s)" unless (options.keys - [:quiet]).empty?
+
         if File.directory?(USER_PATH)
-          if File.directory?(File.join(USER_PATH, ".git"))
-            Dir.chdir(USER_PATH) do
-              command = %w(git pull)
-              command << '--quiet' if options[:quiet]
-              command << 'origin' << 'master'
-              system *command
-            end
-          end
+          new(USER_PATH).update!(options)
         else
           command = %w(git clone)
           command << '--quiet' if options[:quiet]
@@ -122,6 +116,29 @@ module Bundler
       #
       def git?
         File.directory?(File.join(@path,'.git'))
+      end
+
+      #
+      # Updates the ruby-advisory-db.
+      #
+      # @param [Boolean, quiet]
+      #   Specify whether `git` should be `--quiet`.
+      #
+      # @return [Boolean, nil]
+      #   Specifies whether the update was successful.
+      #   A `nil` indicates no update was performed.
+      #
+      # @since 0.7.0
+      #
+      def update!(options={})
+        if git?
+          Dir.chdir(@path) do
+            command = %w(git pull)
+            command << '--quiet' if options[:quiet]
+            command << 'origin' << 'master'
+            system *command
+          end
+        end
       end
 
       #
