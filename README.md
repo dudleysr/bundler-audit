@@ -1,4 +1,5 @@
 # bundler-audit
+**This is a personalized fork for a specific use case scenario**
 [![Build Status](https://travis-ci.org/rubysec/bundler-audit.svg?branch=master)](https://travis-ci.org/rubysec/bundler-audit)
 [![Code Climate](https://codeclimate.com/github/rubysec/bundler-audit.svg)](https://codeclimate.com/github/rubysec/bundler-audit)
 
